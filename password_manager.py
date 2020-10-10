@@ -25,3 +25,38 @@ def saveToClipboard(inp: str):
     win32clipboard.EmptyClipboard()
     win32clipboard.SetClipboardText(inp)
     win32clipboard.CloseClipboard()
+
+
+def createConfig(pw_length=10, char_map=string.ascii_letters + string.digits + "@!_"):
+    return {
+        "pw_length": pw_length,
+        "char_map": char_map,
+        "pw_ids": []
+    }
+
+
+def addPasswordID(config: dict, pwID: str):
+    config.get("pw_ids").append(pwID)
+
+
+def removePasswordID(config: dict, pwID: str):
+    config.get("pw_ids").remove(pwID)
+
+
+def saveConfig(config: dict):
+    np.save('config.npy', config)
+
+
+def loadConfig():
+    return np.load('config.npy', allow_pickle='TRUE').item()
+
+
+if __name__ == "__main__":
+    config = createConfig()
+    addPasswordID(config, "steam")
+    addPasswordID(config, "twitter")
+    addPasswordID(config, "teamspeak")
+    removePasswordID(config, "steam")
+    saveConfig(config)
+    config2 = loadConfig()
+    print(config2)
