@@ -3,7 +3,6 @@ import string
 import numpy as np
 import win32clipboard
 
-PW_LENGTH = 10
 CHARS = string.ascii_lowercase + string.ascii_uppercase + string.digits + "@!_"
 
 
@@ -13,11 +12,11 @@ def hashSha256(inp: str):
     return m.digest()
 
 
-def generatePassword(master_key, password_id):
+def generatePassword(master_key, password_id, password_length):
     inp = master_key + password_id  # concatenate master + pw_id
     hashed = hashSha256(inp)  # hash the input
     pw_full = "".join(list(map(lambda x: CHARS[x], np.array([n for n in hashed]) % len(CHARS))))  # map hash to CHARS
-    return pw_full[0:PW_LENGTH]  # cut password off after (PW_LENGTH)
+    return pw_full[0:password_length]  # cut password to password_length
 
 
 def saveToClipboard(inp: str):
@@ -48,7 +47,10 @@ def saveConfig(config: dict):
 
 
 def loadConfig():
-    return np.load('config.npy', allow_pickle='TRUE').item()
+    try:
+        return np.load('config.npy', allow_pickle='TRUE').item()
+    except FileNotFoundError:
+        return None
 
 
 if __name__ == "__main__":
@@ -56,7 +58,5 @@ if __name__ == "__main__":
     addPasswordID(config, "steam")
     addPasswordID(config, "twitter")
     addPasswordID(config, "teamspeak")
-    removePasswordID(config, "steam")
     saveConfig(config)
-    config2 = loadConfig()
-    print(config2)
+
