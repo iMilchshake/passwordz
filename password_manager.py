@@ -3,7 +3,7 @@ import string
 import numpy as np
 import win32clipboard
 
-CHARS = string.ascii_lowercase + string.ascii_uppercase + string.digits + "@!_"
+DEFAULT_CHARS = string.ascii_lowercase + string.ascii_uppercase + string.digits + "@!_"
 
 
 def hashSha256(inp: str):
@@ -12,10 +12,10 @@ def hashSha256(inp: str):
     return m.digest()
 
 
-def generatePassword(master_key, password_id, password_length):
+def generatePassword(master_key, password_id, password_length, chars):
     inp = master_key + password_id  # concatenate master + pw_id
     hashed = hashSha256(inp)  # hash the input
-    pw_full = "".join(list(map(lambda x: CHARS[x], np.array([n for n in hashed]) % len(CHARS))))  # map hash to CHARS
+    pw_full = "".join(list(map(lambda x: chars[x], np.array([n for n in hashed]) % len(chars))))  # map hash to CHARS
     return pw_full[0:password_length]  # cut password to password_length
 
 

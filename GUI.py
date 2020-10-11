@@ -1,30 +1,60 @@
 import PySimpleGUI as sg
+from pygments.lexer import default
+
 import password_manager as pm
 from functools import reduce
 
-if __name__ == "__main__":
-    # MASTER-KEY INPUT
-    event, values = sg.Window('Passwordz',
-                              [[sg.T('Enter your Master Key'), sg.In(size=(10,1),key='-MASTER-', password_char='*')],
-                               [sg.B('Enter', bind_return_key=True)]]).read(close=True)
 
-    master_key = values['-MASTER-']
-    if master_key is None:
+def windowMasterInput():
+    e, v = sg.Window('Passwordz',
+                     [[sg.T('Enter your Master Key'), sg.In(size=(10, 1), key='-MASTER-', password_char='*')],
+                      [sg.B('Enter', bind_return_key=True), sg.B('Config')]]).read(close=True)
+
+    if v['-MASTER-'] is None:
         print("closing..")
         exit()
 
+    if e is 'Config':
+        cfg = windowConfig(default=False)
+        pm.saveConfig(cfg)
+        return windowMasterInput()
+    else:
+        return v['-MASTER-']
+
+
+def windowConfig(default: bool):
+    if default:
+        cfg = pm.createConfig()  # use default config
+    else:
+        cfg = pm.loadConfig()  # show existing config
+
+    e, v = sg.Window('Config',
+                     [[sg.T('Password Length:'),
+                       sg.Input(default_text=cfg.get('pw_length'), key='-PWLENGTH-', size=(5, 1))],
+                      [sg.T('Char-Map:'), sg.Input(default_text=cfg.get('char_map'), key='-CHARMAP-')],
+                      [sg.T('ID\'s:')], [sg.Multiline(size=(15, 5), key='-IDS-', default_text='<enter id\'s here>') if default else sg.Multiline(size=(15, 5), key='-IDS-', default_text=reduce(lambda x, y: x + '\n' + y, cfg.get('pw_ids')))],
+                      [sg.B('Confirm')]
+                      ]).read(close=True)
+
+    cfg = pm.createConfig(pw_length=int(v['-PWLENGTH-']), char_map=v['-CHARMAP-'])
+    for i in filter(lambda x: len(x) > 0, v['-IDS-'].split('\n')):
+        pm.addPasswordID(cfg, i)
+    return cfg
+
+
+if __name__ == "__main__":
+
+    # First Time -> Create Default Config
+    if pm.loadConfig() is None:
+        print("No Config Found! Creating default config..")
+        config = windowConfig(default=True)
+        pm.saveConfig(config)
+
+    # MASTER-KEY INPUT
+    master_key = windowMasterInput()
+
     # Load Config from Disc
     config = pm.loadConfig()
-
-    # Create Default Config
-    if config is None:
-        print("No Config Found! Creating default config..")
-        config = pm.createConfig()  # create default config
-        pm.addPasswordID(config, 'steam')
-        pm.addPasswordID(config, 'twitter')
-        pm.addPasswordID(config, 'reddit')
-        pm.addPasswordID(config, 'twitch')
-        pm.saveConfig(config)
 
     # Extract Data from Config
     print("loading Config...")
@@ -46,7 +76,7 @@ if __name__ == "__main__":
 
     # Generate Passwords
     for pwid in password_ids:
-        pw_tmp = pm.generatePassword(master_key, pwid, password_length)
+        pw_tmp = pm.generatePassword(master_key, pwid, password_length, password_char_map)
         window[pwid].update(pw_tmp)
 
     # Main Loop
@@ -56,7 +86,7 @@ if __name__ == "__main__":
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
         elif event[:-1] in password_ids:
-            pw = pm.generatePassword(master_key, event[:-1], password_length)
+            pw = pm.generatePassword(master_key, event[:-1], password_length, password_char_map)
             print(pw)
             pm.saveToClipboard(pw)
 
