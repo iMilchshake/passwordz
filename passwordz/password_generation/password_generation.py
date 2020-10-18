@@ -15,8 +15,12 @@ def hashSha256(inp: str):
 def generatePassword(master_key, password_id, password_length, chars):
     inp = master_key + password_id  # concatenate master + pw_id
     hashed = hashSha256(inp)  # hash the input
-    pw_full = "".join(list(map(lambda x: chars[x], np.array([n for n in hashed]) % len(chars))))  # map hash to CHARS
+    pw_full = "".join(list(map(lambda x: chars[x % len(chars)], hashed)))  # map hash to CHARS
     return pw_full[0:password_length]  # cut password to password_length
+
+
+def generatePasswordFlex(mskey, pwid, pwlen, chars):
+    return "".join(list(map(lambda x: chars[x % len(chars)], hashSha256(mskey + pwid))))[0:pwlen]  # Same but shorter :)
 
 
 def saveToClipboard(inp: str):
@@ -43,12 +47,12 @@ def removePasswordID(config: dict, pwID: str):
 
 
 def saveConfig(config: dict):
-    np.save('config.npy', config)
+    np.save('../config.npy', config)
 
 
 def loadConfig():
     try:
-        return np.load('config.npy', allow_pickle='TRUE').item()
+        return np.load('../config.npy', allow_pickle='TRUE').item()
     except FileNotFoundError:
         return None
 
@@ -59,4 +63,3 @@ if __name__ == "__main__":
     addPasswordID(config, "twitter")
     addPasswordID(config, "teamspeak")
     saveConfig(config)
-

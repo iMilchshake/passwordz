@@ -1,7 +1,5 @@
 import PySimpleGUI as sg
-from pygments.lexer import default
-
-import password_manager as pm
+from passwordz.password_generation import password_generation as pm
 from functools import reduce
 
 
