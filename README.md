@@ -1,9 +1,8 @@
 # passwordz
-Password creator and manager written in Python
+Password manager and generator written in Python
 
 ## Features
-* generate random passwords using a master-key
-    * without saving them on disk
+* generate random passwords using a master-key without saving them on disk
 * custom char-space and password length
 * save passwords to clipboard for easy entry
 
