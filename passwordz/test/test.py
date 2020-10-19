@@ -25,3 +25,4 @@ class Test(TestCase):
         pg.saveToClipboard(inp)
         win32clipboard.OpenClipboard()
         assert win32clipboard.GetClipboardData() == inp
+        win32clipboard.CloseClipboard()

@@ -2,6 +2,7 @@ import hashlib
 import string
 import numpy as np
 import win32clipboard
+from threading import Timer
 
 DEFAULT_CHARS = string.ascii_lowercase + string.ascii_uppercase + string.digits + "@!_"
 
@@ -23,17 +24,39 @@ def generatePasswordFlex(mskey, pwid, pwlen, chars):
     return "".join(list(map(lambda x: chars[x % len(chars)], hashSha256(mskey + pwid))))[0:pwlen]  # Same but shorter :)
 
 
-def saveToClipboard(inp: str):
+def saveToClipboard(inp: str, clear_delay: int):
     win32clipboard.OpenClipboard()
     win32clipboard.EmptyClipboard()
     win32clipboard.SetClipboardText(inp)
     win32clipboard.CloseClipboard()
+    if clear_delay is not -1:
+        t = Timer(clear_delay, clearClipboard, [inp])
+        t.start()
+        print("clipboard will be cleared in  %s seconds!" % clear_delay)
 
 
-def createConfig(pw_length=10, char_map=string.ascii_letters + string.digits + "@!_"):
+def clearClipboard(pw):
+    win32clipboard.OpenClipboard()
+    if pw is None:
+        win32clipboard.EmptyClipboard()
+        win32clipboard.CloseClipboard()
+        print('clipboard was cleared!')
+    else:
+        clip = win32clipboard.GetClipboardData()
+        if clip == pw:
+            win32clipboard.EmptyClipboard()
+            win32clipboard.CloseClipboard()
+            print('clipboard was cleared!')
+        else:
+            print('clipboard changed: clipboard not cleared!')
+
+def createConfig(pw_length=10, char_map=string.ascii_letters + string.digits + "@!_", clear_on_exit=True,
+                 clear_after=15):
     return {
         "pw_length": pw_length,
         "char_map": char_map,
+        "clear_on_exit": clear_on_exit,
+        "clear_after": clear_after,
         "pw_ids": []
     }
 
